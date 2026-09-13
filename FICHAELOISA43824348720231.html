@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Eloisa — Ficha Interativa</title>
+<style>
+  :root{
+    --bg:#080a0d;
+    --accent2:#2f5f9e;
+    --accent:#4a8fd6;
+    --cream:#e9eef5;
+    --muted:#9aa8bb;
+    --line:#1f2c3d;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:radial-gradient(ellipse at 50% 0%, #0e141c 0%, #080a0d 60%);
+    color:var(--cream);
+    font-family:'Georgia','Times New Roman',serif;
+    padding:24px;
+  }
+  .sheet{
+    max-width:1300px;
+    margin:0 auto;
+    border:2px solid var(--accent2);
+    outline:1px solid #1c3a63;
+    outline-offset:6px;
+    background:linear-gradient(180deg,#0b0f14,#080a0d);
+    padding:34px;
+    position:relative;
+  }
+
+  /* ---------- HEADER ---------- */
+  .header{
+    display:grid;
+    grid-template-columns: 1fr auto;
+    gap:16px;
+    align-items:start;
+    border-bottom:2px solid var(--line);
+    padding-bottom:16px;
+    margin-bottom:20px;
+  }
+  h1{
+    font-size:3.4em;
+    color:var(--accent);
+    letter-spacing:2px;
+    margin:0;
+    text-shadow:0 0 14px rgba(74,143,214,0.4);
+    font-variant:small-caps;
+  }
+  .subtitle{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-top:8px;
+    flex-wrap:wrap;
+  }
+  .tag{
+    background:var(--accent2);
+    color:#fff;
+    padding:6px 14px;
+    font-weight:bold;
+    font-size:0.85em;
+    letter-spacing:1px;
+    clip-path:polygon(6% 0,100% 0,94% 100%,0% 100%);
+  }
+  .tag.level{ font-size:1.3em; padding:4px 16px; }
+  .plain{ color:var(--muted); font-size:0.9em; letter-spacing:1px; }
+
+  /* ---------- RESOURCE HUD (PV/PD) ---------- */
+  .hud-row{ display:flex; gap:18px; flex-wrap:wrap; justify-content:flex-end; }
+  .hud{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:#0d1218;
+    border:1px solid var(--line);
+    padding:8px 10px;
+    border-radius:4px;
+  }
+  .hud-label{
+    background:var(--cream);
+    color:#111;
+    font-weight:bold;
+    padding:5px 10px;
+    font-size:0.8em;
+    letter-spacing:1px;
+    border-radius:2px;
+  }
+  .hud-btn{
+    width:28px; height:28px;
+    border:1px solid var(--accent2);
+    background:transparent;
+    color:var(--accent);
+    font-size:1.1em;
+    font-weight:bold;
+    cursor:pointer;
+    border-radius:4px;
+    line-height:1;
+    transition:background .15s, color .15s;
+    user-select:none;
+  }
+  .hud-btn:hover{ background:var(--accent2); color:#fff; }
+  .hud-btn:active{ transform:scale(0.92); }
+  .hud-value{
+    font-size:1.3em;
+    font-weight:bold;
+    min-width:64px;
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .hud-value .max{ color:var(--muted); font-size:0.6em; }
+  .hud-bar-wrap{ display:flex; flex-direction:column; gap:4px; }
+  .hud-bar{
+    width:140px;
+    height:10px;
+    background:#182230;
+    border-radius:5px;
+    overflow:hidden;
+    border:1px solid #00000040;
+  }
+  .hud-bar-fill{
+    height:100%;
+    border-radius:5px;
+    transition:width .2s ease;
+  }
+  .hud-bar-fill.pv{ background:linear-gradient(90deg,#173252,var(--accent)); }
+  .hud-bar-fill.pd{ background:linear-gradient(90deg,#174a52,#2ad6c4); }
+
+  /* ---------- MAIN GRID ---------- */
+  .main-grid{
+    display:grid;
+    grid-template-columns: 300px 1fr 320px;
+    gap:26px;
+    align-items:start;
+  }
+  @media (max-width: 1020px){
+    .main-grid{ grid-template-columns:1fr; }
+    .art-col{ order:-1; }
+  }
+
+  .section-title{
+    background:var(--accent2);
+    color:#fff;
+    display:inline-block;
+    padding:6px 18px;
+    font-weight:bold;
+    letter-spacing:1px;
+    clip-path:polygon(4% 0,100% 0,96% 100%,0% 100%);
+    margin-bottom:14px;
+  }
+
+  /* Esquerda: atributos + perícias */
+  .attr-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:1.25em;
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--line);
+  }
+  .attr-name{ letter-spacing:1px; }
+  .skills{ display:flex; flex-direction:column; gap:4px; margin-top:20px; }
+  .skill{
+    display:grid;
+    grid-template-columns: 1fr auto 16px auto auto;
+    align-items:center;
+    gap:6px;
+    font-size:0.85em;
+    padding:4px 0;
+    border-bottom:1px dotted #16202c;
+  }
+  .skill-name{ text-transform:uppercase; letter-spacing:0.5px; }
+  .plus{ color:var(--muted); }
+  .attr-label{ font-size:0.65em; color:var(--muted); letter-spacing:0.5px; }
+
+  /* ---------- ÍCONES GEOMÉTRICOS DE DADO ---------- */
+  .die-icon{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    font-weight:bold;
+    line-height:1;
+    flex-shrink:0;
+    background:var(--accent2);
+  }
+  .die-icon .val{ display:inline-block; }
+
+  /* d4 = triângulo */
+  .die-icon.d4{
+    width:24px; height:22px;
+    clip-path:polygon(50% 6%, 96% 94%, 4% 94%);
+    font-size:0.78em;
+    padding-top:4px;
+  }
+  /* d6 = quadrado */
+  .die-icon.d6{
+    width:22px; height:22px;
+    font-size:0.8em;
+  }
+  /* d8 = losango (diamante) */
+  .die-icon.d8{
+    width:20px; height:20px;
+    transform:rotate(45deg);
+    font-size:0.72em;
+  }
+  .die-icon.d8 .val{ display:inline-block; transform:rotate(-45deg); }
+  /* d10 = losango maior */
+  .die-icon.d10{
+    width:24px; height:24px;
+    transform:rotate(45deg);
+    font-size:0.72em;
+  }
+  .die-icon.d10 .val{ display:inline-block; transform:rotate(-45deg); }
+  /* d12 = círculo (fallback) */
+  .die-icon.d12{
+    width:23px; height:23px;
+    border-radius:50%;
+    font-size:0.72em;
+  }
+
+  /* variante pequena, usada dentro de parágrafos de texto */
+  .die-icon.inline{
+    width:17px; height:15px;
+    vertical-align:-3px;
+    margin:0 1px;
+    font-size:0.68em;
+    padding-top:2px;
+  }
+  .die-icon.inline.d8, .die-icon.inline.d10{
+    width:14px; height:14px;
+    vertical-align:-2px;
+  }
+  .die-icon.inline.d6{
+    width:15px; height:15px;
+  }
+
+  .impeto-icon{
+    height:16px;
+    width:auto;
+    vertical-align:-3px;
+    margin:0 1px;
+  }
+
+  /* Centro: arte do personagem */
+  .art-col{
+    display:flex;
+    justify-content:center;
+    align-self:stretch;
+  }
+  .art-wrap{
+    position:relative;
+    width:100%;
+    max-width:480px;
+    display:flex;
+    justify-content:center;
+  }
+  .art-wrap img{
+    width:100%;
+    height:auto;
+    object-fit:contain;
+    filter:drop-shadow(0 0 30px rgba(74,143,214,0.4));
+    transition:filter 0.6s ease;
+  }
+  .art-wrap img.dead{
+    filter:brightness(0) drop-shadow(0 0 30px rgba(74,143,214,0.55));
+  }
+
+  /* Direita: caixas de habilidade */
+  .side-box{ margin-bottom:26px; }
+  .side-box p{ font-size:0.93em; line-height:1.5; color:var(--cream); }
+  .hl{ color:var(--accent); font-weight:bold; }
+  
+
+  .notes-area{
+    width:100%;
+    background:#0d1218;
+    border:1px solid var(--line);
+    color:var(--cream);
+    font-family:inherit;
+    padding:10px;
+    min-height:80px;
+    resize:vertical;
+  }
+  .reset-btn{
+    margin-top:24px;
+    background:transparent;
+    border:1px solid var(--accent2);
+    color:var(--accent);
+    padding:8px 16px;
+    cursor:pointer;
+    font-family:inherit;
+    letter-spacing:1px;
+  }
+  .reset-btn:hover{ background:var(--accent2); color:#fff; }
+  .hint{ font-size:0.72em; color:var(--muted); margin-top:2px; }
+
+  /* ---------- ATRIBUTOS: redução temporária ---------- */
+  .attr-reduce-controls{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .attr-reduce-btn{
+    width:20px; height:20px;
+    border:1px solid var(--accent2);
+    background:transparent;
+    color:var(--accent);
+    font-size:0.75em;
+    cursor:pointer;
+    border-radius:3px;
+    line-height:1;
+  }
+  .attr-reduce-btn:hover{ background:var(--accent2); color:#fff; }
+  .attr-zero-btn{
+    color:var(--muted);
+    border-color:var(--line);
+    font-size:0.65em;
+  }
+  .attr-zero-btn:hover{ background:var(--line); color:var(--cream); }
+  .attr-reduced-tag{
+    font-size:0.65em;
+    color:var(--muted);
+  }
+  .end-scene-btn{
+    margin-top:10px;
+    width:100%;
+    background:transparent;
+    border:1px dashed var(--accent2);
+    color:var(--accent);
+    padding:6px;
+    font-size:0.75em;
+    letter-spacing:1px;
+    cursor:pointer;
+  }
+  .end-scene-btn:hover{ background:var(--accent2); color:#fff; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1 id="char-name">Eloisa</h1>
+      <div class="subtitle">
+        <span class="tag" id="char-class">ANALISTA</span>
+        <span class="plain" id="char-origin">• ARTISTA •</span>
+        <span class="tag level"><span class="plain" style="color:#fff;">NÍVEL</span> <span id="char-level">2</span></span>
+      </div>
+    </div>
+
+    <div class="hud-row">
+      <div class="hud">
+        <span class="hud-label">PV</span>
+        <button class="hud-btn" id="pv-minus">−</button>
+        <div class="hud-bar-wrap">
+          <span class="hud-value"><span id="pv-num">12</span><span class="max" id="pv-max-label">/12</span></span>
+          <div class="hud-bar"><div class="hud-bar-fill pv" id="pv-fill"></div></div>
+        </div>
+        <button class="hud-btn" id="pv-plus">+</button>
+      </div>
+      <div class="hud">
+        <span class="hud-label">PD</span>
+        <button class="hud-btn" id="pd-minus">−</button>
+        <div class="hud-bar-wrap">
+          <span class="hud-value"><span id="pd-num">14</span><span class="max" id="pd-max-label">/14</span></span>
+          <div class="hud-bar"><div class="hud-bar-fill pd" id="pd-fill"></div></div>
+        </div>
+        <button class="hud-btn" id="pd-plus">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main-grid">
+
+    <!-- ESQUERDA: atributos + perícias -->
+    <div>
+      <div class="section-title">ATRIBUTOS</div>
+      <div id="attrs-list"></div>
+      <button class="end-scene-btn" id="end-scene-btn">ENCERRAR CENA (reseta passos)</button>
+
+      <div class="section-title" style="margin-top:24px;">PERÍCIAS</div>
+      <div class="skills" id="skills-list"></div>
+    </div>
+
+    <!-- CENTRO: arte -->
+    <div class="art-col">
+      <div class="art-wrap">
+        <img id="portrait-img" src="eloisa.png" alt="Retrato do personagem">
+      </div>
+    </div>
+
+    <!-- DIREITA: habilidades + anotações -->
+    <div>
+      <div class="side-box">
+        <div class="section-title">AVALIAÇÃO</div>
+        <p>Você pode gastar <span class="hl">uma ação e 2 PD</span> para observar um ser ou um ambiente. Você recebe <span class="die-icon d4 inline"><span class="val">4</span></span><span class="die-icon d4 inline"><span class="val">4</span></span> que pode usar em testes relativos àquele ser ou ambiente (pode usá-los como quiser, recebendo <b>+<span class="die-icon d4 inline"><span class="val">4</span></span><span class="die-icon d4 inline"><span class="val">4</span></span></b> em um teste ou <b>+<span class="die-icon d4 inline"><span class="val">4</span></span></b> em dois testes). Você não pode acumular mais do que dois dados bônus por esta habilidade.</p>
+      </div>
+
+      <div class="side-box">
+        <div class="section-title">FOCO EMOCIONAL</div>
+        <p>Quando faz um <span class="hl">teste emocional</span>, você pode gastar <span class="hl">2 PD</span> para receber <b>+<span class="die-icon d4 inline"><span class="val">4</span></span></b> no teste.</p>
+      </div>
+
+      <div class="side-box">
+        <div class="section-title">ANOTAÇÕES</div>
+        <textarea class="notes-area" id="notes" placeholder="Anote condições, itens, contexto de cena..."></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="reset-btn" id="reset-btn">RESETAR FICHA</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* =========================================================
+   CONFIG — edite só aqui pra mudar a ficha.
+   ========================================================= */
+const CONFIG = {
+  name: "Eloisa",
+  class: "ANALISTA",
+  origin: "• ARTISTA •",
+  level: 2,
+  pvMax: 12,
+  pdMax: 14,
+
+  portrait: "eloisa.png",
+  attributes: [
+    { name: "FÍSICO", value: 8 },
+    { name: "MENTE", value: 8 },
+    { name: "EMOÇÃO", value: 6 },
+  ],
+  skills: [
+    {name:"ACROBACIA", dice:6, attr:8, attrName:"FÍSICO"},
+    {name:"APTIDÃO", dice:4, attr:8, attrName:"MENTE"},
+    {name:"ATLETISMO", dice:4, attr:8, attrName:"FÍSICO"},
+    {name:"CRIME", dice:6, attr:8, attrName:"FÍSICO"},
+    {name:"DISCIPLINA", dice:6, attr:6, attrName:"EMOÇÃO"},
+    {name:"ENGANAÇÃO", dice:4, attr:6, attrName:"EMOÇÃO"},
+    {name:"FURTIVIDADE", dice:4, attr:8, attrName:"FÍSICO"},
+    {name:"INTIMIDAR", dice:4, attr:6, attrName:"EMOÇÃO"},
+    {name:"INTUIÇÃO", dice:8, attr:6, attrName:"EMOÇÃO"},
+    {name:"LUTA", dice:4, attr:8, attrName:"FÍSICO"},
+    {name:"MÁQUINAS", dice:4, attr:8, attrName:"MENTE"},
+    {name:"MEDICINA", dice:4, attr:8, attrName:"MENTE"},
+    {name:"OCULTISMO", dice:4, attr:8, attrName:"MENTE"},
+    {name:"PERCEPÇÃO", dice:6, attr:6, attrName:"MENTE"},
+    {name:"PERSUASÃO", dice:4, attr:6, attrName:"EMOÇÃO"},
+    {name:"PESQUISAR", dice:6, attr:8, attrName:"MENTE"},
+    {name:"PONTARIA", dice:4, attr:8, attrName:"FÍSICO"},
+    {name:"SOBREVIVÊNCIA", dice:4, attr:8, attrName:"MENTE"},
+    {name:"TECNOLOGIA", dice:6, attr:8, attrName:"MENTE"},
+    {name:"VIGOR", dice:4, attr:6, attrName:"FÍSICO"},
+  ]
+};
+
+// ---------- ONLINE / REALTIME ----------
+const ONLINE_CONFIG = {
+  enabled: true,
+  supabaseUrl: "https://jcjbtyxzhktgepnmytfn.supabase.co",
+  supabaseKey: "sb_publishable_RtevOOTkGcbAJzg3H8kvqw_Oq6FhoLb",
+  fichaId: "eloisa"
+};
+
+let onlineClient = null;
+let onlineChannel = null;
+let remoteUpdating = false;
+let notesSaveTimer = null;
+
+function applyRemoteState(remoteState) {
+  if (!remoteState || typeof remoteState !== 'object') return;
+  remoteUpdating = true;
+  state = Object.assign(state, remoteState);
+  try {
+    document.getElementById('notes').value = state.notes || '';
+  } catch (e) {}
+  renderPV();
+  renderPD();
+  renderAttributes();
+  if (typeof renderImpeto === 'function') renderImpeto();
+  remoteUpdating = false;
+}
+
+async function loadOnlineState() {
+  if (!ONLINE_CONFIG.enabled || !window.supabase || ONLINE_CONFIG.supabaseKey.startsWith('COLE_AQUI')) return;
+  onlineClient = window.supabase.createClient(ONLINE_CONFIG.supabaseUrl, ONLINE_CONFIG.supabaseKey);
+  const { data, error } = await onlineClient
+    .from('fichas')
+    .select('state')
+    .eq('id', ONLINE_CONFIG.fichaId)
+    .maybeSingle();
+  if (error) { console.warn('Falha ao carregar ficha online:', error); return; }
+  if (data && data.state) {
+    applyRemoteState(data.state);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } else {
+    await pushOnlineState();
+  }
+
+  onlineChannel = onlineClient
+    .channel('ficha-' + ONLINE_CONFIG.fichaId)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'fichas',
+      filter: 'id=eq.' + ONLINE_CONFIG.fichaId
+    }, payload => {
+      if (payload.new && payload.new.state) applyRemoteState(payload.new.state);
+    })
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') console.log('Ficha online: conectado');
+    });
+}
+
+async function pushOnlineState() {
+  if (!ONLINE_CONFIG.enabled || !onlineClient || remoteUpdating) return;
+  const snapshot = JSON.parse(JSON.stringify(state));
+  const { error } = await onlineClient.from('fichas').upsert({
+    id: ONLINE_CONFIG.fichaId,
+    state: snapshot,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'id' });
+  if (error) console.warn('Falha ao salvar ficha online:', error);
+}
+
+// ---------- ÍCONES GEOMÉTRICOS DE DADO ----------
+function dieIconHTML(value, inline){
+  const cls = 'die-icon d' + value + (inline ? ' inline' : '');
+  return `<span class="${cls}"><span class="val">${value}</span></span>`;
+}
+
+// ---------- STATE (salvo automaticamente no navegador) ----------
+const STORAGE_KEY = 'ficha_' + CONFIG.name.toLowerCase();
+
+let state = {
+  pv: CONFIG.pvMax,
+  pd: CONFIG.pdMax,
+
+  notes: "",
+  attrReductions: {}
+};
+
+// Carrega o que foi salvo antes (se existir)
+try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    state = Object.assign(state, parsed);
+  }
+} catch (e) {
+  console.warn('Não foi possível carregar a ficha salva:', e);
+}
+
+function saveState(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn('Não foi possível salvar a ficha:', e);
+  }
+  pushOnlineState();
+}
+
+// ---------- CABEÇALHO ----------
+document.getElementById('notes').value = state.notes;
+document.getElementById('char-name').textContent = CONFIG.name;
+document.getElementById('char-class').textContent = CONFIG.class;
+document.getElementById('char-origin').textContent = CONFIG.origin;
+document.getElementById('char-level').textContent = CONFIG.level;
+document.getElementById('portrait-img').src = CONFIG.portrait;
+document.getElementById('pv-max-label').textContent = '/' + CONFIG.pvMax;
+document.getElementById('pd-max-label').textContent = '/' + CONFIG.pdMax;
+
+// ---------- HUD PV/PD ----------
+function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+// ---------- ATRIBUTOS (com redução temporária de passo) ----------
+const attrsList = document.getElementById('attrs-list');
+const DIE_LADDER = [4,6,8,10,12];
+function getReducedDie(baseValue, steps){
+  let idx = DIE_LADDER.indexOf(baseValue);
+  if(idx === -1) return baseValue;
+  idx = clamp(idx - steps, 0, DIE_LADDER.length - 1);
+  return DIE_LADDER[idx];
+}
+function renderAttributes(){
+  attrsList.innerHTML = '';
+  CONFIG.attributes.forEach(a => {
+    const steps = state.attrReductions[a.name] || 0;
+    const effective = getReducedDie(a.value, steps);
+    let tag = '';
+    if(steps > 0) tag = ' <span class="attr-reduced-tag">(reduzido)</span>';
+    else if(steps < 0) tag = ' <span class="attr-reduced-tag">(aumentado)</span>';
+    const row = document.createElement('div');
+    row.className = 'attr-row';
+    row.innerHTML = `
+      <span class="attr-name">${a.name}${tag}</span>
+      <div class="attr-reduce-controls">
+        <button class="attr-reduce-btn" data-attr="${a.name}" data-dir="-1" title="Reduzir um passo">−</button>
+        ${dieIconHTML(effective)}
+        <button class="attr-reduce-btn" data-attr="${a.name}" data-dir="1" title="Aumentar um passo">+</button>
+        ${steps !== 0 ? `<button class="attr-reduce-btn attr-zero-btn" data-attr="${a.name}" title="Zerar">↻</button>` : ''}
+      </div>
+    `;
+    attrsList.appendChild(row);
+  });
+  attrsList.querySelectorAll('.attr-reduce-btn:not(.attr-zero-btn)').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.attr;
+      const dir = parseInt(btn.dataset.dir);
+      const current = state.attrReductions[name] || 0;
+      state.attrReductions[name] = clamp(current + (dir === -1 ? 1 : -1), -4, 4);
+      renderAttributes();
+      saveState();
+    });
+  });
+  attrsList.querySelectorAll('.attr-zero-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.attr;
+      state.attrReductions[name] = 0;
+      renderAttributes();
+      saveState();
+    });
+  });
+}
+
+document.getElementById('end-scene-btn').addEventListener('click', () => {
+  state.attrReductions = {};
+  renderAttributes();
+  saveState();
+});
+
+// ---------- PERÍCIAS ----------
+const skillsList = document.getElementById('skills-list');
+CONFIG.skills.forEach(s => {
+  const row = document.createElement('div');
+  row.className = 'skill';
+  row.innerHTML = `
+    <span class="skill-name">${s.name}</span>
+    ${dieIconHTML(s.dice)}
+    <span class="plus">+</span>
+    ${dieIconHTML(s.attr)}
+    <span class="attr-label">${s.attrName}</span>
+  `;
+  skillsList.appendChild(row);
+});
+
+// ---------- HUD PV/PD ----------
+function renderPV(){
+  state.pv = clamp(state.pv, 0, CONFIG.pvMax);
+  document.getElementById('pv-num').textContent = state.pv;
+  document.getElementById('pv-fill').style.width = (state.pv / CONFIG.pvMax * 100) + '%';
+
+  const portrait = document.getElementById('portrait-img');
+  if(state.pv <= 0){
+    portrait.classList.add('dead');
+  } else {
+    portrait.classList.remove('dead');
+  }
+}
+function renderPD(){
+  state.pd = clamp(state.pd, 0, CONFIG.pdMax);
+  document.getElementById('pd-num').textContent = state.pd;
+  document.getElementById('pd-fill').style.width = (state.pd / CONFIG.pdMax * 100) + '%';
+}
+
+document.getElementById('pv-minus').addEventListener('click', () => { state.pv--; renderPV(); saveState(); });
+document.getElementById('pv-plus').addEventListener('click', () => { state.pv++; renderPV(); saveState(); });
+document.getElementById('pd-minus').addEventListener('click', () => { state.pd--; renderPD(); saveState(); });
+document.getElementById('pd-plus').addEventListener('click', () => { state.pd++; renderPD(); saveState(); });
+
+
+
+document.getElementById('notes').addEventListener('input', (e) => {
+  state.notes = e.target.value;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (err) {}
+  clearTimeout(notesSaveTimer);
+  notesSaveTimer = setTimeout(() => { saveState(); }, 1500);
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  state = { pv: CONFIG.pvMax, pd: CONFIG.pdMax, notes: "", attrReductions: {} };
+  document.getElementById('notes').value = "";
+  renderPV(); renderPD(); renderAttributes();
+  saveState();
+});
+
+renderAttributes();
+renderPV();
+renderPD();
+
+</script>
+
+</body>
+</html>
